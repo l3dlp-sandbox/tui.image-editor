@@ -1,5 +1,5 @@
 import {extend} from 'tui-code-snippet';
-import util from './util';
+import {isSupportFileApi, base64ToBlob, toInteger} from './util';
 import Imagetracer from './helper/imagetracer';
 
 export default {
@@ -41,8 +41,14 @@ export default {
                 this.ui.rotate.setRangeBarAngle('setAngle', angle);
             }
         };
+        const setFilterStateRangeBarOnAction = filterOptions => {
+            if (this.ui.submenu === 'filter') {
+                this.ui.filter.setFilterState(filterOptions);
+            }
+        };
         const onEndUndoRedo = result => {
             setAngleRangeBarOnAction(result);
+            setFilterStateRangeBarOnAction(result);
 
             return result;
         };
@@ -59,12 +65,14 @@ export default {
             undo: () => {
                 if (!this.isEmptyUndoStack()) {
                     exitCropOnAction();
+                    this.deactivateAll();
                     this.undo().then(onEndUndoRedo);
                 }
             },
             redo: () => {
                 if (!this.isEmptyRedoStack()) {
                     exitCropOnAction();
+                    this.deactivateAll();
                     this.redo().then(onEndUndoRedo);
                 }
             },
@@ -77,7 +85,7 @@ export default {
                 });
             },
             delete: () => {
-                this.ui.changeDeleteButtonEnabled(false);
+                this.ui.changeHelpButtonEnabled('delete', false);
                 exitCropOnAction();
                 this.removeActiveObject();
                 this.activeObjectId = null;
@@ -85,11 +93,11 @@ export default {
             deleteAll: () => {
                 exitCropOnAction();
                 this.clearObjects();
-                this.ui.changeDeleteButtonEnabled(false);
-                this.ui.changeDeleteAllButtonEnabled(false);
+                this.ui.changeHelpButtonEnabled('delete', false);
+                this.ui.changeHelpButtonEnabled('deleteAll', false);
             },
             load: file => {
-                if (!util.isSupportFileApi()) {
+                if (!isSupportFileApi()) {
                     alert('This browser does not support file-api');
                 }
 
@@ -108,8 +116,8 @@ export default {
                 let imageName = this.getImageName();
                 let blob, type, w;
 
-                if (util.isSupportFileApi() && window.saveAs) {
-                    blob = util.base64ToBlob(dataURL);
+                if (isSupportFileApi() && window.saveAs) {
+                    blob = base64ToBlob(dataURL);
                     type = blob.type.split('/')[1];
                     if (imageName.split('.').pop() !== type) {
                         imageName += `.${type}`;
@@ -264,9 +272,9 @@ export default {
      */
     _textAction() {
         return extend({
-            changeTextStyle: styleObj => {
+            changeTextStyle: (styleObj, isSilent) => {
                 if (this.activeObjectId) {
-                    this.changeTextStyle(this.activeObjectId, styleObj);
+                    this.changeTextStyle(this.activeObjectId, styleObj, isSilent);
                 }
             }
         }, this._commonAction());
@@ -299,9 +307,9 @@ export default {
      */
     _shapeAction() {
         return extend({
-            changeShape: changeShapeObject => {
+            changeShape: (changeShapeObject, isSilent) => {
                 if (this.activeObjectId) {
-                    this.changeShape(this.activeObjectId, changeShapeObject);
+                    this.changeShape(this.activeObjectId, changeShapeObject, isSilent);
                 }
             },
             setDrawingShape: shapeType => {
@@ -333,6 +341,7 @@ export default {
                 this.stopDrawingMode();
                 this.ui.changeMenu('crop');
             },
+            /* eslint-disable */
             preset: presetType => {
                 switch (presetType) {
                     case 'preset-square':
@@ -380,9 +389,10 @@ export default {
      */
     _filterAction() {
         return extend({
-            applyFilter: (applying, type, options) => {
+            applyFilter: (applying, type, options, isSilent) => {
+
                 if (applying) {
-                    this.applyFilter(type, options);
+                    this.applyFilter(type, options, isSilent);
                 } else if (this.hasFilter(type)) {
                     this.removeFilter(type);
                 }
@@ -397,19 +407,19 @@ export default {
         this.on({
             undoStackChanged: length => {
                 if (length) {
-                    this.ui.changeUndoButtonStatus(true);
-                    this.ui.changeResetButtonStatus(true);
+                    this.ui.changeHelpButtonEnabled('undo', true);
+                    this.ui.changeHelpButtonEnabled('reset', true);
                 } else {
-                    this.ui.changeUndoButtonStatus(false);
-                    this.ui.changeResetButtonStatus(false);
+                    this.ui.changeHelpButtonEnabled('undo', false);
+                    this.ui.changeHelpButtonEnabled('reset', false);
                 }
                 this.ui.resizeEditor();
             },
             redoStackChanged: length => {
                 if (length) {
-                    this.ui.changeRedoButtonStatus(true);
+                    this.ui.changeHelpButtonEnabled('redo', true);
                 } else {
-                    this.ui.changeRedoButtonStatus(false);
+                    this.ui.changeHelpButtonEnabled('redo', false);
                 }
                 this.ui.resizeEditor();
             },
@@ -417,8 +427,8 @@ export default {
             objectActivated: obj => {
                 this.activeObjectId = obj.id;
 
-                this.ui.changeDeleteButtonEnabled(true);
-                this.ui.changeDeleteAllButtonEnabled(true);
+                this.ui.changeHelpButtonEnabled('delete', true);
+                this.ui.changeHelpButtonEnabled('deleteAll', true);
 
                 if (obj.type === 'cropzone') {
                     this.ui.crop.changeApplyButtonStatus(true);
@@ -443,6 +453,8 @@ export default {
                     if (this.ui.submenu !== 'text') {
                         this.ui.changeMenu('text', false, false);
                     }
+
+                    this.ui.text.setTextStyleStateOnAction(obj);
                 } else if (obj.type === 'icon') {
                     this.stopDrawingMode();
                     if (this.ui.submenu !== 'icon') {
@@ -453,13 +465,18 @@ export default {
             },
             /* eslint-enable complexity */
             addText: pos => {
+                const {
+                    textColor: fill,
+                    fontSize,
+                    fontStyle,
+                    fontWeight,
+                    underline
+                } = this.ui.text;
+                const fontFamily = 'Noto Sans';
+
                 this.addText('Double Click', {
                     position: pos.originPosition,
-                    styles: {
-                        fill: this.ui.text.textColor,
-                        fontSize: util.toInteger(this.ui.text.fontSize),
-                        fontFamily: 'Noto Sans'
-                    }
+                    styles: {fill, fontSize, fontFamily, fontStyle, fontWeight, underline}
                 }).then(() => {
                     this.changeCursor('default');
                 });
@@ -472,7 +489,7 @@ export default {
             },
             objectScaled: obj => {
                 if (['i-text', 'text'].indexOf(obj.type) > -1) {
-                    this.ui.text.fontSize = util.toInteger(obj.fontSize);
+                    this.ui.text.fontSize = toInteger(obj.fontSize);
                 } else if (['rect', 'circle', 'triangle'].indexOf(obj.type) >= 0) {
                     const {width, height} = obj;
                     const strokeValue = this.ui.shape.getStrokeValue();

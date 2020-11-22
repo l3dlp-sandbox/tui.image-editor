@@ -6,11 +6,12 @@ import snippet from 'tui-code-snippet';
 import fabric from 'fabric';
 import Component from '../interface/component';
 import Cropzone from '../extension/cropzone';
-import {keyCodes, componentNames} from '../consts';
-import {clamp} from '../util';
+import {keyCodes, componentNames, CROPZONE_DEFAULT_OPTIONS} from '../consts';
+import {clamp, fixFloatingPoint} from '../util';
 
 const MOUSE_MOVE_THRESHOLD = 10;
 const DEFAULT_OPTION = {
+    presetRatio: null,
     top: -10,
     left: -10,
     height: 1,
@@ -83,7 +84,7 @@ class Cropper extends Component {
             obj.evented = false;
         });
 
-        this._cropzone = new Cropzone(canvas, {
+        this._cropzone = new Cropzone(canvas, snippet.extend({
             left: 0,
             top: 0,
             width: 0.5,
@@ -91,12 +92,8 @@ class Cropper extends Component {
             strokeWidth: 0, // {@link https://github.com/kangax/fabric.js/issues/2860}
             cornerSize: 10,
             cornerColor: 'black',
-            fill: 'transparent',
-            hasRotatingPoint: false,
-            hasBorders: false,
-            lockScalingFlip: true,
-            lockRotation: true
-        }, this.graphics.cropSelectionStyle);
+            fill: 'transparent'
+        }, CROPZONE_DEFAULT_OPTIONS, this.graphics.cropSelectionStyle));
 
         canvas.discardActiveObject();
         canvas.add(this._cropzone);
@@ -130,6 +127,16 @@ class Cropper extends Component {
 
         fabric.util.removeListener(document, 'keydown', this._listeners.keydown);
         fabric.util.removeListener(document, 'keyup', this._listeners.keyup);
+    }
+
+    /**
+     * Change cropzone visible
+     * @param {boolean} visible - cropzone visible state
+     */
+    changeVisibility(visible) {
+        if (this._cropzone) {
+            this._cropzone.set({visible});
+        }
     }
 
     /**
@@ -297,7 +304,7 @@ class Cropper extends Component {
         canvas.selection = false;
         canvas.remove(cropzone);
 
-        cropzone.set(presetRatio ? this._getPresetCropSizePosition(presetRatio) : DEFAULT_OPTION);
+        cropzone.set(presetRatio ? this._getPresetPropertiesForCropSize(presetRatio) : DEFAULT_OPTION);
 
         canvas.add(cropzone);
         canvas.selection = true;
@@ -308,12 +315,12 @@ class Cropper extends Component {
     }
 
     /**
-     * Set a cropzone square
+     * get a cropzone square info
      * @param {number} presetRatio - preset ratio
-     * @returns {{left: number, top: number, width: number, height: number}}
+     * @returns {{presetRatio: number, left: number, top: number, width: number, height: number}}
      * @private
      */
-    _getPresetCropSizePosition(presetRatio) {
+    _getPresetPropertiesForCropSize(presetRatio) {
         const canvas = this.getCanvas();
         const originalWidth = canvas.getWidth();
         const originalHeight = canvas.getHeight();
@@ -328,9 +335,10 @@ class Cropper extends Component {
         [width, height] = snippet.map([width, height], sizeValue => sizeValue * scaleWidth);
 
         const scaleHeight = getScale(height, originalHeight);
-        [width, height] = snippet.map([width, height], sizeValue => sizeValue * scaleHeight);
+        [width, height] = snippet.map([width, height], sizeValue => fixFloatingPoint(sizeValue * scaleHeight));
 
         return {
+            presetRatio,
             top: (originalHeight - height) / 2,
             left: (originalWidth - width) / 2,
             width,
@@ -361,4 +369,4 @@ class Cropper extends Component {
     }
 }
 
-module.exports = Cropper;
+export default Cropper;

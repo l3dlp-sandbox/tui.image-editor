@@ -1,4 +1,4 @@
-import util from '../util';
+import {assignmentForDestroy, getRgb} from '../util';
 import Colorpicker from './tools/colorpicker';
 import Range from './tools/range';
 import Submenu from './submenuBase';
@@ -12,28 +12,41 @@ const DRAW_OPACITY = 0.7;
  * @ignore
  */
 class Draw extends Submenu {
-    constructor(subMenuElement, {locale, iconStyle, menuBarPosition, usageStatistics}) {
+    constructor(subMenuElement, {locale, makeSvgIcon, menuBarPosition, usageStatistics}) {
         super(subMenuElement, {
             locale,
             name: 'draw',
-            iconStyle,
+            makeSvgIcon,
             menuBarPosition,
             templateHtml,
             usageStatistics
         });
 
         this._els = {
-            lineSelectButton: this.selector('#tie-draw-line-select-button'),
-            drawColorpicker: new Colorpicker(
-                this.selector('#tie-draw-color'), '#00a9ff', this.toggleDirection, this.usageStatistics
+            lineSelectButton: this.selector('.tie-draw-line-select-button'),
+            drawColorPicker: new Colorpicker(
+                this.selector('.tie-draw-color'), '#00a9ff', this.toggleDirection, this.usageStatistics
             ),
-            drawRange: new Range(this.selector('#tie-draw-range'), defaultDrawRangeValus),
-            drawRangeValue: this.selector('#tie-draw-range-value')
+            drawRange: new Range({
+                slider: this.selector('.tie-draw-range'),
+                input: this.selector('.tie-draw-range-value')
+            }, defaultDrawRangeValus)
         };
 
         this.type = null;
-        this.color = this._els.drawColorpicker.color;
+        this.color = this._els.drawColorPicker.color;
         this.width = this._els.drawRange.value;
+    }
+
+    /**
+     * Destroys the instance.
+     */
+    destroy() {
+        this._removeEvent();
+        this._els.drawColorPicker.destroy();
+        this._els.drawRange.destroy();
+
+        assignmentForDestroy(this);
     }
 
     /**
@@ -42,13 +55,22 @@ class Draw extends Submenu {
      *   @param {Function} actions.setDrawMode - set draw mode
      */
     addEvent(actions) {
-        this.actions = actions;
+        this.eventHandler.changeDrawType = this._changeDrawType.bind(this);
 
-        this._els.lineSelectButton.addEventListener('click', this._changeDrawType.bind(this));
-        this._els.drawColorpicker.on('change', this._changeDrawColor.bind(this));
+        this.actions = actions;
+        this._els.lineSelectButton.addEventListener('click', this.eventHandler.changeDrawType);
+        this._els.drawColorPicker.on('change', this._changeDrawColor.bind(this));
         this._els.drawRange.on('change', this._changeDrawRange.bind(this));
-        this._els.drawRangeValue.value = this._els.drawRange.value;
-        this._els.drawRangeValue.setAttribute('readonly', true);
+    }
+
+    /**
+     * Remove event
+     * @private
+     */
+    _removeEvent() {
+        this._els.lineSelectButton.removeEventListener('click', this.eventHandler.changeDrawType);
+        this._els.drawColorPicker.off();
+        this._els.drawRange.off();
     }
 
     /**
@@ -57,7 +79,7 @@ class Draw extends Submenu {
     setDrawMode() {
         this.actions.setDrawMode(this.type, {
             width: this.width,
-            color: util.getRgb(this.color, DRAW_OPACITY)
+            color: getRgb(this.color, DRAW_OPACITY)
         });
     }
 
@@ -125,8 +147,6 @@ class Draw extends Submenu {
      * @private
      */
     _changeDrawRange(value) {
-        value = util.toInteger(value);
-        this._els.drawRangeValue.value = value;
         this.width = value;
         if (!this.type) {
             this.changeStartMode();

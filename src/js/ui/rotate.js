@@ -1,7 +1,7 @@
 import Range from './tools/range';
 import Submenu from './submenuBase';
 import templateHtml from './template/submenu/rotate';
-import {toInteger} from '../util';
+import {toInteger, assignmentForDestroy} from '../util';
 import {defaultRotateRangeValus} from '../consts';
 
 const CLOCKWISE = 30;
@@ -13,11 +13,11 @@ const COUNTERCLOCKWISE = -30;
  * @ignore
  */
 class Rotate extends Submenu {
-    constructor(subMenuElement, {locale, iconStyle, menuBarPosition, usageStatistics}) {
+    constructor(subMenuElement, {locale, makeSvgIcon, menuBarPosition, usageStatistics}) {
         super(subMenuElement, {
             locale,
             name: 'rotate',
-            iconStyle,
+            makeSvgIcon,
             menuBarPosition,
             templateHtml,
             usageStatistics
@@ -25,20 +25,31 @@ class Rotate extends Submenu {
         this._value = 0;
 
         this._els = {
-            rotateButton: this.selector('#tie-retate-button'),
-            rotateRange: new Range(this.selector('#tie-rotate-range'), defaultRotateRangeValus),
-            rotateRangeValue: this.selector('#tie-ratate-range-value')
+            rotateButton: this.selector('.tie-retate-button'),
+            rotateRange: new Range({
+                slider: this.selector('.tie-rotate-range'),
+                input: this.selector('.tie-ratate-range-value')
+            }, defaultRotateRangeValus)
         };
+    }
+
+    /**
+     * Destroys the instance.
+     */
+    destroy() {
+        this._removeEvent();
+        this._els.rotateRange.destroy();
+
+        assignmentForDestroy(this);
     }
 
     setRangeBarAngle(type, angle) {
         let resultAngle = angle;
 
         if (type === 'rotate') {
-            resultAngle = parseInt(this._els.rotateRangeValue.value, 10) + angle;
+            resultAngle = parseInt(this._els.rotateRange.value, 10) + angle;
         }
 
-        this._els.rotateRangeValue.value = resultAngle;
         this._setRangeBarRatio(resultAngle);
     }
 
@@ -53,11 +64,21 @@ class Rotate extends Submenu {
      *   @param {Function} actions.setAngle - set angle action
      */
     addEvent(actions) {
+        this.eventHandler.rotationAngleChanged = this._changeRotateForButton.bind(this);
+
         // {rotate, setAngle}
         this.actions = actions;
-        this._els.rotateButton.addEventListener('click', this._changeRotateForButton.bind(this));
+        this._els.rotateButton.addEventListener('click', this.eventHandler.rotationAngleChanged);
         this._els.rotateRange.on('change', this._changeRotateForRange.bind(this));
-        this._els.rotateRangeValue.setAttribute('readonly', true);
+    }
+
+    /**
+     * Remove event
+     * @private
+     */
+    _removeEvent() {
+        this._els.rotateButton.removeEventListener('click', this.eventHandler.rotationAngleChanged);
+        this._els.rotateRange.off();
     }
 
     /**
@@ -68,7 +89,6 @@ class Rotate extends Submenu {
      */
     _changeRotateForRange(value, isLast) {
         const angle = toInteger(value);
-        this._els.rotateRangeValue.value = angle;
         this.actions.setAngle(angle, !isLast);
         this._value = angle;
     }
@@ -80,7 +100,7 @@ class Rotate extends Submenu {
      */
     _changeRotateForButton(event) {
         const button = event.target.closest('.tui-image-editor-button');
-        const angle = this._els.rotateRangeValue.value;
+        const angle = this._els.rotateRange.value;
 
         if (button) {
             const rotateType = this.getButtonType(button, ['counterclockwise', 'clockwise']);

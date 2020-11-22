@@ -1,5 +1,5 @@
 import Submenu from './submenuBase';
-import util from '../util';
+import {assignmentForDestroy, isSupportFileApi} from '../util';
 import templateHtml from './template/submenu/mask';
 
 /**
@@ -8,20 +8,29 @@ import templateHtml from './template/submenu/mask';
  * @ignore
  */
 class Mask extends Submenu {
-    constructor(subMenuElement, {locale, iconStyle, menuBarPosition, usageStatistics}) {
+    constructor(subMenuElement, {locale, makeSvgIcon, menuBarPosition, usageStatistics}) {
         super(subMenuElement, {
             locale,
             name: 'mask',
-            iconStyle,
+            makeSvgIcon,
             menuBarPosition,
             templateHtml,
             usageStatistics
         });
 
         this._els = {
-            applyButton: this.selector('#tie-mask-apply'),
-            maskImageButton: this.selector('#tie-mask-image-file')
+            applyButton: this.selector('.tie-mask-apply'),
+            maskImageButton: this.selector('.tie-mask-image-file')
         };
+    }
+
+    /**
+     * Destroys the instance.
+     */
+    destroy() {
+        this._removeEvent();
+
+        assignmentForDestroy(this);
     }
 
     /**
@@ -31,9 +40,26 @@ class Mask extends Submenu {
      *   @param {Function} actions.applyFilter - apply filter action
      */
     addEvent(actions) {
+        const loadMaskFile = this._loadMaskFile.bind(this);
+        const applyMask = this._applyMask.bind(this);
+
+        this.eventHandler = {
+            loadMaskFile,
+            applyMask
+        };
+
         this.actions = actions;
-        this._els.maskImageButton.addEventListener('change', this._loadMaskFile.bind(this));
-        this._els.applyButton.addEventListener('click', this._applyMask.bind(this));
+        this._els.maskImageButton.addEventListener('change', loadMaskFile);
+        this._els.applyButton.addEventListener('click', applyMask);
+    }
+
+    /**
+     * Remove event
+     * @private
+     */
+    _removeEvent() {
+        this._els.maskImageButton.removeEventListener('change', this.eventHandler.loadMaskFile);
+        this._els.applyButton.removeEventListener('click', this.eventHandler.applyMask);
     }
 
     /**
@@ -53,7 +79,7 @@ class Mask extends Submenu {
     _loadMaskFile(event) {
         let imgUrl;
 
-        if (!util.isSupportFileApi()) {
+        if (!isSupportFileApi()) {
             alert('This browser does not support file-api');
         }
 

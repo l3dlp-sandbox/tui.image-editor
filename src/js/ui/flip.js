@@ -1,4 +1,5 @@
 import snippet from 'tui-code-snippet';
+import {assignmentForDestroy} from '../util';
 import Submenu from './submenuBase';
 import templateHtml from './template/submenu/flip';
 
@@ -8,11 +9,11 @@ import templateHtml from './template/submenu/flip';
  * @ignore
  */
 class Flip extends Submenu {
-    constructor(subMenuElement, {locale, iconStyle, menuBarPosition, usageStatistics}) {
+    constructor(subMenuElement, {locale, makeSvgIcon, menuBarPosition, usageStatistics}) {
         super(subMenuElement, {
             locale,
             name: 'flip',
-            iconStyle,
+            makeSvgIcon,
             menuBarPosition,
             templateHtml,
             usageStatistics
@@ -20,8 +21,17 @@ class Flip extends Submenu {
         this.flipStatus = false;
 
         this._els = {
-            flipButton: this.selector('#tie-flip-button')
+            flipButton: this.selector('.tie-flip-button')
         };
+    }
+
+    /**
+     * Destroys the instance.
+     */
+    destroy() {
+        this._removeEvent();
+
+        assignmentForDestroy(this);
     }
 
     /**
@@ -30,8 +40,17 @@ class Flip extends Submenu {
      *   @param {Function} actions.flip - flip action
      */
     addEvent(actions) {
+        this.eventHandler.changeFlip = this._changeFlip.bind(this);
         this._actions = actions;
-        this._els.flipButton.addEventListener('click', this._changeFlip.bind(this));
+        this._els.flipButton.addEventListener('click', this.eventHandler.changeFlip);
+    }
+
+    /**
+     * Remove event
+     * @private
+     */
+    _removeEvent() {
+        this._els.flipButton.removeEventListener('click', this.eventHandler.changeFlip);
     }
 
     /**

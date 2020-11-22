@@ -29,6 +29,8 @@
 * [Usage](#-usage)
   * [HTML](#html)
   * [JavaScript](#javascript)
+  * [Menu svg icon setting](#menu-svg-icon-setting)
+  * [TypeScript](#-typescript)
 * [Development](#-development)
   * [Setup](#setup)
   * [Run webpack-dev-server](#run-webpack-dev-server)
@@ -63,7 +65,7 @@ tui.usageStatistics = false;
 ## 🌏 Browser Support
 | <img src="https://user-images.githubusercontent.com/1215767/34348387-a2e64588-ea4d-11e7-8267-a43365103afe.png" alt="Chrome" width="16px" height="16px" /> Chrome | <img src="https://user-images.githubusercontent.com/1215767/34348590-250b3ca2-ea4f-11e7-9efb-da953359321f.png" alt="IE" width="16px" height="16px" /> Internet Explorer | <img src="https://user-images.githubusercontent.com/1215767/34348380-93e77ae8-ea4d-11e7-8696-9a989ddbbbf5.png" alt="Edge" width="16px" height="16px" /> Edge | <img src="https://user-images.githubusercontent.com/1215767/34348394-a981f892-ea4d-11e7-9156-d128d58386b9.png" alt="Safari" width="16px" height="16px" /> Safari | <img src="https://user-images.githubusercontent.com/1215767/34348383-9e7ed492-ea4d-11e7-910c-03b39d52f496.png" alt="Firefox" width="16px" height="16px" /> Firefox |
 | :---------: | :---------: | :---------: | :---------: | :---------: |
-| Yes | 9+ | Yes | Yes | Yes |
+| Yes | 10+ | Yes | Yes | Yes |
 
 
 ## 💪 Has full features that stick to the basic.
@@ -139,7 +141,7 @@ var imageEditor = new tui.ImageEditor('#tui-image-editor-container', {
 ## 🙆 Easy to apply the size and design you want
 
 ### Can be used everywhere.
-  - Widely supported in browsers including IE9, which is the minimum requirement to support canvas.
+  - Widely supported in browsers including IE10.
   - Option to support various display sizes.
     (allows you to use the editor features on your web pages at least over **550 * 450 sizes**)
     
@@ -191,22 +193,9 @@ $ npm install --save tui-image-editor # Latest version
 $ npm install --save tui-image-editor@<version> # Specific version
 ```
 
-##### 2. `fabric.js` installation
-And you should add **postInstall** script to your `package.json`. 
-_This process will be removed when `fabric.js` updated to v2.7.0 and bundled with TOAST UI ImageEditor together._
+##### 2. If the installation of the `fabric.js` dependency module does not go smoothly
 
-```js
-{
-    // ...
-    "scripts": {
-        // ...
-        "postInstall": "npm install --no-save --no-optional fabric@^1.6.7"
-    }
-    // ...
-}
-```
-
-Or you can add `fabric` as dependency. **But** there is [some steps](https://github.com/fabricjs/fabric.js#install-with-npm) to be installed well.
+To solve the problem, you need to refer to [Some Steps](https://github.com/fabricjs/fabric.js#install-with-npm) to solve the problem.
 
 #### bower
 
@@ -265,6 +254,7 @@ Add dependencies & initialize ImageEditor class with given element to make an im
 
 ```javascript
 var ImageEditor = require('tui-image-editor');
+var FileSaver = require('file-saver'); //to download edited image to local. Use after npm install file-saver
 var blackTheme = require('./js/theme/black-theme.js');
 var locale_ru_RU = { // override default English locale to your custom
     'Crop': 'Обзрезать',
@@ -305,12 +295,22 @@ var instance = new ImageEditor(document.querySelector('#tui-image-editor'), {
 });
 ```
 
+### Menu svg icon setting
+
+#### There are two ways to set icons.
+
+1. **Use default svg built** into imageEditor without setting svg file path (Features added since version v3.9.0).
+2. There is a way to use the **actual physical svg file** and **set the file location manually**.
+
+Can find more details in [this document](https://github.com/nhn/tui.image-editor/blob/master/docs/Basic-Tutorial.md#4-menu-submenu-svg-icon-setting).
+
 ### TypeScript
 If you using TypeScript, You must `import module = require('module')` on importing.
 [`export =` and `import = require()`](https://www.typescriptlang.org/docs/handbook/modules.html#export--and-import--require)
 
 ```typescript
 import ImageEditor = require('tui-image-editor');
+var FileSaver = require('file-saver'); //to download edited image to local. Use after npm install file-saver
 
 const instance = new ImageEditor(document.querySelector('#tui-image-editor'), {
     cssMaxWidth: 700,
@@ -356,15 +356,15 @@ $ npm run serve
 * **API** : [http://nhn.github.io/tui.image-editor/latest](http://nhn.github.io/tui.image-editor/latest/index)
 
 ## 💬 Contributing
-* [Code of Conduct](CODE_OF_CONDUCT.md)
-* [Contributing guideline](CONTRIBUTING.md)
-* [Issue guideline](ISSUE_TEMPLATE.md)
+* [Code of Conduct](https://github.com/nhn/tui.image-editor/blob/master/CODE_OF_CONDUCT.md)
+* [Contributing guideline](https://github.com/nhn/tui.image-editor/blob/master/CONTRIBUTING.md)
+* [Issue guideline](https://github.com/nhn/tui.image-editor/blob/master/ISSUE_TEMPLATE.md)
 * [Commit convention](https://github.com/nhn/tui.image-editor/blob/production/docs/COMMIT_MESSAGE_CONVENTION.md)
 
 ## 🔩 Dependency
-* [fabric.js](https://github.com/fabricjs/fabric.js/releases) >=3.0.0 && <= 3.3.2
-* [tui.code-snippet](https://github.com/nhn/tui.code-snippet/releases/tag/v1.3.0) >=1.3.0
-* [tui.color-picker](https://github.com/nhn/tui.color-picker/releases/tag/v2.2.0) >=2.2.0
+* [fabric.js](https://github.com/fabricjs/fabric.js/releases) =3.6.0
+* [tui.code-snippet](https://github.com/nhn/tui.code-snippet/releases/tag/v1.5.0) >=1.5.0
+* [tui.color-picker](https://github.com/nhn/tui.color-picker/releases/tag/v2.2.6) >=2.2.6
 
 
 ## 🍞 TOAST UI Family

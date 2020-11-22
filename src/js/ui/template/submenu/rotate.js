@@ -1,31 +1,21 @@
 /**
- * @param {Locale} locale - Translate text
- * @param {Object} normal - iconStyle
- * @param {Object} active - iconStyle
+ * @param {Object} submenuInfo - submenu info for make template
+ *   @param {Locale} locale - Translate text
+ *   @param {Function} makeSvgIcon - svg icon generator
  * @returns {string}
  */
-export default ({locale, iconStyle: {normal, active}}) => (`
+export default ({locale, makeSvgIcon}) => (`
     <ul class="tui-image-editor-submenu-item">
-        <li id="tie-retate-button">
+        <li class="tie-retate-button">
             <div class="tui-image-editor-button clockwise">
                 <div>
-                    <svg class="svg_ic-submenu">
-                        <use xlink:href="${normal.path}#${normal.name}-ic-rotate-clockwise"
-                            class="normal"/>
-                        <use xlink:href="${active.path}#${active.name}-ic-rotate-clockwise"
-                            class="active"/>
-                    </svg>
+                    ${makeSvgIcon(['normal', 'active'], 'rotate-clockwise', true)}
                 </div>
                 <label> 30 </label>
             </div>
             <div class="tui-image-editor-button counterclockwise">
                 <div>
-                    <svg class="svg_ic-submenu">
-                        <use xlink:href="${normal.path}#${normal.name}-ic-rotate-counterclockwise"
-                            class="normal"/>
-                        <use xlink:href="${active.path}#${active.name}-ic-rotate-counterclockwise"
-                            class="active"/>
-                    </svg>
+                    ${makeSvgIcon(['normal', 'active'], 'rotate-counterclockwise', true)}
                 </div>
                 <label> -30 </label>
             </div>
@@ -35,8 +25,8 @@ export default ({locale, iconStyle: {normal, active}}) => (`
         </li>
         <li class="tui-image-editor-newline tui-image-editor-range-wrap">
             <label class="range">${locale.localize('Range')}</label>
-            <div id="tie-rotate-range"></div>
-            <input id="tie-ratate-range-value" class="tui-image-editor-range-value" value="0" />
+            <div class="tie-rotate-range"></div>
+            <input class="tie-ratate-range-value tui-image-editor-range-value" value="0" />
         </li>
     </ul>
 `);

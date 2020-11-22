@@ -3,10 +3,9 @@
  * @fileoverview Change icon color
  */
 import commandFactory from '../factory/command';
-import Promise from 'core-js/library/es6/promise';
-import consts from '../consts';
+import {Promise} from '../util';
+import {componentNames, rejectMessages, commandNames} from '../consts';
 
-const {componentNames, rejectMessages, commandNames} = consts;
 const {ICON} = componentNames;
 
 const command = {
@@ -40,7 +39,7 @@ const command = {
      */
     undo(graphics) {
         const iconComp = graphics.getComponent(ICON);
-        const {object: icon, color} = this.undoData.object;
+        const {object: icon, color} = this.undoData;
 
         iconComp.setColor(color, icon);
 
@@ -50,4 +49,4 @@ const command = {
 
 commandFactory.register(command);
 
-module.exports = command;
+export default command;

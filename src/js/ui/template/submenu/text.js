@@ -1,38 +1,27 @@
 /**
- * @param {Locale} locale - Translate text
- * @param {Object} normal - iconStyle
- * @param {Object} active - iconStyle
+ * @param {Object} submenuInfo - submenu info for make template
+ *   @param {Locale} locale - Translate text
+ *   @param {Function} makeSvgIcon - svg icon generator
  * @returns {string}
  */
-export default ({locale, iconStyle: {normal, active}}) => (`
+export default ({locale, makeSvgIcon}) => (`
     <ul class="tui-image-editor-submenu-item">
-        <li id="tie-text-effect-button">
+        <li class="tie-text-effect-button">
             <div class="tui-image-editor-button bold">
                 <div>
-                    <svg class="svg_ic-submenu">
-                    <use xlink:href="${normal.path}#${normal.name}-ic-text-bold" class="normal"/>
-                    <use xlink:href="${active.path}#${active.name}-ic-text-bold" class="active"/>
-                    </svg>
+                    ${makeSvgIcon(['normal', 'active'], 'text-bold', true)}
                 </div>
                 <label> ${locale.localize('Bold')} </label>
             </div>
             <div class="tui-image-editor-button italic">
                 <div>
-                    <svg class="svg_ic-submenu">
-                    <use xlink:href="${normal.path}#${normal.name}-ic-text-italic" class="normal"/>
-                    <use xlink:href="${active.path}#${active.name}-ic-text-italic" class="active"/>
-                    </svg>
+                    ${makeSvgIcon(['normal', 'active'], 'text-italic', true)}
                 </div>
                 <label> ${locale.localize('Italic')} </label>
             </div>
             <div class="tui-image-editor-button underline">
                 <div>
-                    <svg class="svg_ic-submenu">
-                        <use xlink:href="${normal.path}#${normal.name}-ic-text-underline"
-                            class="normal"/>
-                        <use xlink:href="${active.path}#${active.name}-ic-text-underline"
-                            class="active"/>
-                    </svg>
+                    ${makeSvgIcon(['normal', 'active'], 'text-underline', true)}
                 </div>
                 <label> ${locale.localize('Underline')} </label>
             </div>
@@ -40,37 +29,22 @@ export default ({locale, iconStyle: {normal, active}}) => (`
         <li class="tui-image-editor-partition">
             <div></div>
         </li>
-        <li id="tie-text-align-button">
+        <li class="tie-text-align-button">
             <div class="tui-image-editor-button left">
                 <div>
-                    <svg class="svg_ic-submenu">
-                     <use xlink:href="${normal.path}#${normal.name}-ic-text-align-left"
-                        class="normal"/>
-                     <use xlink:href="${active.path}#${active.name}-ic-text-align-left"
-                        class="active"/>
-                    </svg>
+                    ${makeSvgIcon(['normal', 'active'], 'text-align-left', true)}
                 </div>
                 <label> ${locale.localize('Left')} </label>
             </div>
             <div class="tui-image-editor-button center">
                 <div>
-                    <svg class="svg_ic-submenu">
-                     <use xlink:href="${normal.path}#${normal.name}-ic-text-align-center"
-                        class="normal"/>
-                     <use xlink:href="${active.path}#${active.name}-ic-text-align-center"
-                        class="active"/>
-                    </svg>
+                    ${makeSvgIcon(['normal', 'active'], 'text-align-center', true)}
                 </div>
                 <label> ${locale.localize('Center')} </label>
             </div>
             <div class="tui-image-editor-button right">
                 <div>
-                    <svg class="svg_ic-submenu">
-                     <use xlink:href="${normal.path}#${normal.name}-ic-text-align-right"
-                        class="normal"/>
-                     <use xlink:href="${active.path}#${active.name}-ic-text-align-right"
-                        class="active"/>
-                    </svg>
+                    ${makeSvgIcon(['normal', 'active'], 'text-align-right', true)}
                 </div>
                 <label> ${locale.localize('Right')} </label>
             </div>
@@ -79,15 +53,15 @@ export default ({locale, iconStyle: {normal, active}}) => (`
             <div></div>
         </li>
         <li>
-            <div id="tie-text-color" title="${locale.localize('Color')}"></div>
+            <div class="tie-text-color" title="${locale.localize('Color')}"></div>
         </li>
         <li class="tui-image-editor-partition only-left-right">
             <div></div>
         </li>
         <li class="tui-image-editor-newline tui-image-editor-range-wrap">
             <label class="range">${locale.localize('Text size')}</label>
-            <div id="tie-text-range"></div>
-            <input id="tie-text-range-value" class="tui-image-editor-range-value" value="0" />
+            <div class="tie-text-range"></div>
+            <input class="tie-text-range-value tui-image-editor-range-value" value="0" />
         </li>
     </ul>
 `);

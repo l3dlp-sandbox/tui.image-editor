@@ -3,14 +3,12 @@
  * @fileoverview Tests command with command-factory
  */
 import snippet from 'tui-code-snippet';
-import Promise from 'core-js/library/es6/promise';
+import {Promise} from '../src/js/util';
 import fabric from 'fabric';
 import Invoker from '../src/js/invoker';
 import commandFactory from '../src/js/factory/command';
 import Graphics from '../src/js/graphics';
-import consts from '../src/js/consts';
-
-const commands = consts.commandNames;
+import {commandNames as commands} from '../src/js/consts';
 
 describe('commandFactory', () => {
     let invoker, mockImage, canvas, graphics;
@@ -260,6 +258,45 @@ describe('commandFactory', () => {
         });
     });
 
+    describe('textCommand', () => {
+        let textObjectId;
+        const defaultFontSize = 50;
+        const defaultUnderline = false;
+        beforeEach(done => {
+            invoker.execute(commands.ADD_TEXT, graphics, 'text', {
+                styles: {
+                    fontSize: defaultFontSize,
+                    underline: false
+                }
+            }).then(textObject => {
+                textObjectId = textObject.id;
+                done();
+            });
+        });
+        it('"changeTextStyle" should set text style', done => {
+            invoker.execute(commands.CHANGE_TEXT_STYLE, graphics, textObjectId, {
+                fontSize: 30,
+                underline: true
+            }).then(() => {
+                const textObject = graphics.getObject(textObjectId);
+                expect(textObject.fontSize).toBe(30);
+                expect(textObject.underline).toBe(true);
+                done();
+            });
+        });
+        it('"undo()" should restore fontSize', done => {
+            invoker.execute(commands.CHANGE_TEXT_STYLE, graphics, textObjectId, {
+                fontSize: 30,
+                underline: true
+            }).then(() => invoker.undo()).then(() => {
+                const textObject = graphics.getObject(textObjectId);
+                expect(textObject.fontSize).toBe(defaultFontSize);
+                expect(textObject.underline).toBe(defaultUnderline);
+                done();
+            });
+        });
+    });
+
     describe('rotationImageCommand', () => {
         it('"rotate()" should add angle', () => {
             const originAngle = mockImage.angle;
@@ -276,13 +313,44 @@ describe('commandFactory', () => {
             expect(mockImage.angle).toBe(30);
         });
 
-        xit('"undo()" should restore angle', done => {
+        it('"undo()" should restore angle', done => {
             const originalAngle = mockImage.angle;
 
             invoker.execute(commands.ROTATE_IMAGE, graphics, 'setAngle', 100).then(() => (
                 invoker.undo()
             )).then(() => {
                 expect(mockImage.angle).toBe(originalAngle);
+                done();
+            });
+        });
+    });
+
+    describe('shapeCommand', () => {
+        let shapeObjectId;
+        const defaultStrokeWidth = 12;
+        beforeEach(done => {
+            invoker.execute(commands.ADD_SHAPE, graphics, 'rect', {
+                strokeWidth: defaultStrokeWidth
+            }).then(shapeObject => {
+                shapeObjectId = shapeObject.id;
+                done();
+            });
+        });
+        it('"changeShape" should set strokeWidth', done => {
+            invoker.execute(commands.CHANGE_SHAPE, graphics, shapeObjectId, {
+                strokeWidth: 50
+            }).then(() => {
+                const shapeObject = graphics.getObject(shapeObjectId);
+                expect(shapeObject.strokeWidth).toBe(50);
+                done();
+            });
+        });
+        it('"redo()" should restore strokeWidth', done => {
+            invoker.execute(commands.CHANGE_SHAPE, graphics, shapeObjectId, {
+                strokeWidth: 50
+            }).then(() => invoker.undo()).then(() => {
+                const shapeObject = graphics.getObject(shapeObjectId);
+                expect(shapeObject.strokeWidth).toBe(defaultStrokeWidth);
                 done();
             });
         });
@@ -336,8 +404,14 @@ describe('commandFactory', () => {
         let object, object2, group;
 
         beforeEach(() => {
-            object = new fabric.Rect();
-            object2 = new fabric.Rect();
+            object = new fabric.Rect({
+                left: 10,
+                top: 10
+            });
+            object2 = new fabric.Rect({
+                left: 5,
+                top: 20
+            });
             group = new fabric.Group();
 
             graphics.add(object);
@@ -379,6 +453,21 @@ describe('commandFactory', () => {
             )).then(() => {
                 expect(canvas.contains(object)).toBe(true);
                 expect(canvas.contains(object2)).toBe(true);
+                done();
+            });
+        });
+
+        it('"undo ()" should restore the position of the removed object (group). ', done => {
+            const activeSelection = graphics.getActiveSelectionFromObjects(canvas.getObjects());
+            graphics.setActiveObject(activeSelection);
+
+            invoker.execute(commands.REMOVE_OBJECT, graphics, graphics.getActiveObjectIdForRemove()).then(() => (
+                invoker.undo()
+            )).then(() => {
+                expect(object.left).toBe(10);
+                expect(object.top).toBe(10);
+                expect(object2.left).toBe(5);
+                expect(object2.top).toBe(20);
                 done();
             });
         });

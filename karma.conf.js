@@ -1,6 +1,5 @@
 /* eslint-disable consts-on-top, no-process-env, require-jsdoc */
 /* eslint-disable no-process-env, require-jsdoc */
-
 const webdriverConfig = {
     hostname: 'fe.nhnent.com',
     port: 4444,
@@ -114,6 +113,12 @@ module.exports = function(config) {
                 watched: false,
                 included: false,
                 served: true
+            },
+            {
+                pattern: 'test/fixtures/*.svg',
+                watched: false,
+                included: false,
+                served: true
             }
         ],
         preprocessors: {
@@ -121,36 +126,41 @@ module.exports = function(config) {
         },
         reporters: ['dots'],
         webpack: {
+            mode: 'development',
             devtool: 'inline-source-map',
             externals: {
                 fabric: 'fabric'
             },
             module: {
-                preLoaders: [
+                rules: [
                     {
                         test: /\.js$/,
-                        exclude: /(test|bower_components|node_modules)/,
-                        loader: 'istanbul-instrumenter',
+                        include: /src/,
+                        exclude: /node_modules/,
+                        loader: 'eslint-loader',
+                        enforce: 'pre'
+                    },
+                    {
+                        test: /\.js$/,
+                        exclude: /(test|node_modules)/,
+                        loader: 'istanbul-instrumenter-loader',
                         query: {
                             esModules: true
                         }
                     },
                     {
                         test: /\.js$/,
-                        include: /src/,
-                        exclude: /(bower_components|node_modules)/,
-                        loader: 'eslint-loader'
-                    }
-                ],
-                loaders: [
-                    {
-                        test: /\.js$/,
-                        exclude: /(node_modules|bower_components)/,
-                        loader: 'babel'
-                    },
-                    {
+                        exclude: /node_modules/,
+                        loader: 'babel-loader?cacheDirectory',
+                        options: {
+                            babelrc: true
+                        }
+                    }, {
                         test: /\.styl$/,
-                        loader: 'css-loader!stylus-loader?paths=src/css/'
+                        use: ['css-loader', 'stylus-loader']
+                    }, {
+                        test: /\.svg$/,
+                        loader: 'svg-inline-loader'
                     }
                 ]
             }

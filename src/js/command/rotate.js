@@ -3,10 +3,26 @@
  * @fileoverview Rotate an image
  */
 import commandFactory from '../factory/command';
-import consts from '../consts';
+import {componentNames, commandNames} from '../consts';
 
-const {componentNames, commandNames} = consts;
 const {ROTATION} = componentNames;
+
+/**
+ * Chched data for undo
+ * @type {Object}
+ */
+let chchedUndoDataForSilent = null;
+
+/**
+ * Make undo data
+ * @param {Component} rotationComp - rotation component
+ * @returns {object} - undodata
+ */
+function makeUndoData(rotationComp) {
+    return {
+        angle: rotationComp.getCurrentAngle()
+    };
+}
 
 const command = {
     name: commandNames.ROTATE_IMAGE,
@@ -22,8 +38,10 @@ const command = {
     execute(graphics, type, angle, isSilent) {
         const rotationComp = graphics.getComponent(ROTATION);
 
-        if (!isSilent) {
-            this.undoData.angle = rotationComp.getCurrentAngle();
+        if (!this.isRedo) {
+            const undoData = makeUndoData(rotationComp);
+
+            chchedUndoDataForSilent = this.setUndoData(undoData, chchedUndoDataForSilent, isSilent);
         }
 
         return rotationComp[type](angle);
@@ -46,4 +64,4 @@ const command = {
 
 commandFactory.register(command);
 
-module.exports = command;
+export default command;
