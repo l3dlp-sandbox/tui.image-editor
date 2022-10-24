@@ -1,12 +1,8 @@
 {
   "name": "tui-image-editor",
-  "authors": [
-    "NHN FE Dev Lab <dl_javascript@nhn.com>"
-  ],
+  "authors": ["NHN Cloud. FE Dev Lab <dl_javascript@nhn.com>"],
   "license": "MIT",
-  "main": [
-      "dist/tui-image-editor.js"
-  ],
+  "main": ["dist/tui-image-editor.js"],
   "ignore": [
     "**/.*",
     "node_modules",
@@ -18,7 +14,6 @@
     "data.js",
     "Gruntfile.js",
     "gulpfile.js",
-    "karma.*.js",
     "conf.json",
     "package.json",
     ".gitignore",
@@ -28,7 +23,7 @@
     "webpack.*.js"
   ],
   "dependencies": {
-    "fabric": "3.6.0",
+    "fabric": "4.2.0",
     "tui-code-snippet": "^1.5.0",
     "tui-color-picker": "^2.2.0"
   },
